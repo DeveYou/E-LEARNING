@@ -1,0 +1,47 @@
+
+******************* Azure deployment *********************
+# Login to azure
+az login
+
+# Create the group resource
+az create
+
+# Create the AKS cluster
+az aks create --resource-group elearning-rg --name elearning-cluster --node-count 1 --node-vm-size Standard_B2s --generate-ssh-keys
+
+# Connect to the AKS cluster
+az aks get-credentials --resource-group elearning-rg --name elearning-cluster #permet la machine locale de contrôler le cluster AKS via kubectl.
+
+# Check the connection status
+kubectl get nodes
+
+# Install Nginx ingress controller
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
+
+*******************  end ************************
+
+************** Kubernetes Dashboard ***********
+# install kubernetes dashboard
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+# create dashboard-adminuser.yaml then apply
+kubectl apply -f dashboard-adminuser.yaml
+
+# get access token to the dashboard
+kubectl -n kubernetes-dashboard create token admin-user
+
+# Run the tunnel to the dashboard (localhosst)
+kubectl proxy
+
+then enter this link: http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+
+*********** end ****************
+
+
+***************** test the deployment *************
+
+# Check the pods status
+kubectl get pods -n e-learning
+
+# Check the Nginx service ingress
+kubectl get svc -n ingress-nginx
