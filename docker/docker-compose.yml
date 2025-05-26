@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: e-learning-db
+    environment:
+      POSTGRES_DB: e_learning
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - e-learning-network
+    restart: unless-stopped
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ../Backend
+      dockerfile: Dockerfile
+    container_name: e-learning-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/e_learning
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    networks:
+      - e-learning-network
+    restart: unless-stopped
+    volumes:
+      - backend_uploads:/app/uploads
+
+  # React Frontend
+  frontend:
+    build:
+      context: ../Frontend
+      dockerfile: Dockerfile
+    container_name: e-learning-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - e-learning-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  backend_uploads:
+
+networks:
+  e-learning-network:
+    driver: bridge
